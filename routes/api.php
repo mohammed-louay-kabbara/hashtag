@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NubdhaController;
+use App\Http\Controllers\SaveController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\NubdhaViewController;
+use App\Http\Controllers\HashtagStoryController;
+use App\Http\Controllers\FollowerController;
+use App\Http\Controllers\HashtagController;
+use App\Http\Controllers\LoveController;
+
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'API is working!',
+        'status' => 'success'
+    ]);
+});
+    Route::post('login', [AuthController::class, 'login']);
+    Route::get('info', [AuthController::class, 'info']);
+    Route::post('editpassword', [AuthController::class, 'editpassword']);
+    Route::post('forgotpassword', [AuthController::class, 'forgot_password']);
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('forgot-password', [AuthController::class, 'sendVerificationCode']);
+    Route::post('reset-password', [AuthController::class, 'verifyResetCode']);
+    Route::post('count_profile', [AuthController::class, 'count_profile']);
+    Route::get('info_user/{id}', [AuthController::class, 'info_user']);
+    Route::get('nubdha_user/{id}', [AuthController::class, 'nubdha_user']);
+    Route::get('hashtag_user/{id}', [AuthController::class, 'hashtag_user']);
+    Route::post('pictureupdate', [AuthController::class, 'pictureupdate']);
+    Route::post('notify', [NotificationController::class, 'sendTest']);
+    Route::get('my_profile', [AuthController::class, 'my_profile']);
+    Route::get('my_nubdha', [AuthController::class, 'my_nubdha']);
+    Route::get('my_save', [AuthController::class, 'my_save']);
+    Route::get('my_hashtag', [AuthController::class, 'my_hashtag']);    
+    Route::get('my_reels', [AuthController::class, 'my_reels']);
+    Route::get('getuser', [AuthController::class, 'getuser']);
+    Route::post('searchUsers', [AuthController::class,'searchUsers']);
+    Route::get('Users', [AuthController::class,'users']);
+    Route::post('/store-device-token', [AuthController::class, 'storeDeviceToken']);
+    Route::resource('Nubdha',NubdhaController::class);
+    Route::resource('save',SaveController::class);
+    Route::resource('report',ReportController::class);
+    Route::resource('nubdha_views',NubdhaViewController::class);
+    Route::resource('hashtagstory',HashtagStoryController::class);
+    Route::resource('follower',FollowerController::class);
+    Route::resource('hashtag',HashtagController::class);
+    Route::resource('love',LoveController::class);
