@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name_hashtag');
-             $table->foreignId('story_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('story_id')->constrained('stories')->cascadeOnDelete();
             $table->timestamps();
         });
     }
