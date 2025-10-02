@@ -35,7 +35,7 @@ class HashtagController extends Controller
             'user_id' => Auth::id(),
             'description' => $request->description
         ]);
-        return response()->json(['تم إضافة الهاشتاغ بنجاخ'], 200);
+        return response()->json(['تم إضافة الهاشتاغ بنجاح'], 200);
     }
 
 
@@ -72,7 +72,7 @@ class HashtagController extends Controller
     public function destroy($id)
     {
         hashtag::where('id',$id)->delete();
-        return response()->json(['تم الحذف بنجاح'], 200, $headers);
+        return response()->json(['تم الحذف بنجاح'], 200);
         
     }
 }
