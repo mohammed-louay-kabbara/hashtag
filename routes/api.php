@@ -47,4 +47,5 @@ Route::get('/test', function () {
     Route::resource('hashtagstory',HashtagStoryController::class);
     Route::resource('follower',FollowerController::class);
     Route::resource('hashtag',HashtagController::class);
+    Route::post('hashtagupdate/{id}',[HashtagController::class,'update']);
     Route::resource('love',LoveController::class);
