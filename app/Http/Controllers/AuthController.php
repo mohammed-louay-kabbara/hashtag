@@ -354,6 +354,16 @@ public function verifyResetCode(Request $request)
         return view('editprofile',compact('user'));
     }
 
+    public function editprofile(Request $request)
+    {
+        User::where('id',Auth::id())->update([
+            'name'=> $request->name,
+            'description' => $request->description,
+            
+
+        ]);
+    }
+
     public function editprofile_admin(Request $request)
     {
         $validator = Validator::make($request->all(), [

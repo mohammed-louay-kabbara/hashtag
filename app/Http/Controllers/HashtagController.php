@@ -55,16 +55,24 @@ class HashtagController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, hashtag $hashtag)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'description' => 'required', 
+        ]);
+        hashtag::where('id',$id)->update([
+            'description' => $request->description
+        ]);
+        return response()->json(['تم التعديل بنجاح'], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(hashtag $hashtag)
+    public function destroy($id)
     {
-        //
+        hashtag::where('id',$id)->delete();
+        return response()->json(['تم الحذف بنجاح'], 200, $headers);
+        
     }
 }
