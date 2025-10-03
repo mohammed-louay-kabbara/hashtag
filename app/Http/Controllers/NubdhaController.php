@@ -153,7 +153,7 @@ class NubdhaController extends Controller
         }
         else {
            $story->update([
-             'caption' => $request->captions ?? null
+             'caption' => $request->caption ?? null
            ]);
         }
         return response()->json(['تم التعديل بنجاح'], 200);
