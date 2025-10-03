@@ -144,7 +144,7 @@ class NubdhaController extends Controller
                 Storage::disk('public')->delete($story->media);
             }
             $path = $request->file('media')->store('stories', 'public');
-            $type = strpos($file->getMimeType(), 'video') !== false ? 'video' : 'image';
+            $type = strpos($request->file('media')->getMimeType(), 'video') !== false ? 'video' : 'image';
             $story->update([
                 'media' => $path,
                 'type' => $type,
