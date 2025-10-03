@@ -41,6 +41,7 @@ Route::get('/test', function () {
     Route::get('Users', [AuthController::class,'users']);
     Route::post('/store-device-token', [AuthController::class, 'storeDeviceToken']);
     Route::resource('Nubdha',NubdhaController::class);
+    Route::post('nubdhaupdate',[NubdhaController::class,'update']);
     Route::resource('save',SaveController::class);
     Route::resource('report',ReportController::class);
     Route::resource('nubdha_views',NubdhaViewController::class);

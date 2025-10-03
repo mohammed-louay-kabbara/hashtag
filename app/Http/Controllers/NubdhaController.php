@@ -135,14 +135,29 @@ class NubdhaController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, nubdha $nubdha)
-    {
-        //
-    }
 
+    public function update(Request $request)
+    {
+        $story=story::where('id',$request->story_id)->first();
+        if ($request->media) {
+            if (Storage::disk('public')->exists($story->media)) {
+                Storage::disk('public')->delete($story->media);
+            }
+            $path = $request->file('media')->store('stories', 'public');
+            $type = strpos($file->getMimeType(), 'video') !== false ? 'video' : 'image';
+            $story->update([
+                'media' => $path,
+                'type' => $type,
+                'caption' => $request->captions ?? null
+            ]);
+        }
+        else {
+           $story->update([
+             'caption' => $request->captions ?? null
+           ]);
+        }
+        return response()->json(['تم التعديل بنجاح'], 200);
+    }
 
     public function destroy($id)
     {
