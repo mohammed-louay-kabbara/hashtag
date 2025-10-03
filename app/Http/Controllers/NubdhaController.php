@@ -143,11 +143,19 @@ class NubdhaController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(nubdha $nubdha)
+
+    public function destroy($id)
     {
-        //
+        $nubdha = nubdha::with('stories')->where('id', $id)->first();
+            if ($nubdha) {
+                foreach ($nubdha->stories as $story) {
+                    if (Storage::disk('public')->exists($story->media)) {
+                        Storage::disk('public')->delete($story->media);
+                    }
+                    $story->delete();
+                }
+            $nubdha->delete();
+            }
+        return response()->json(['تم الحذف بنجاح'], 200);
     }
 }
