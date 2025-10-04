@@ -11,6 +11,7 @@ use App\Http\Controllers\HashtagStoryController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\LoveController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -50,3 +51,5 @@ Route::get('/test', function () {
     Route::resource('hashtag',HashtagController::class);
     Route::post('hashtagupdate/{id}',[HashtagController::class,'update']);
     Route::resource('love',LoveController::class);
+
+    Route::post('/store-device-token', [NotificationController::class, 'storeDeviceToken']);
