@@ -14,26 +14,25 @@ class NubdhaController extends Controller
 
     public function index()
     {
-        // $nubdha= nubdha::with('user','stories')->get();
-        // return response()->json($nubdha, 200);
-         // 1. load nubdhas with user and stories
+    $meId = auth()->id();
+    // 1. جلب النبذات مع المستخدم والستوريات
     $nubdhas = Nubdha::with(['user', 'stories'])->get();
 
-    // 2. collect all story ids
+    // 2. جميع story_ids
     $storyIds = $nubdhas->pluck('stories.*.id')
-                        ->flatten()
-                        ->filter()
-                        ->unique()
-                        ->values()
-                        ->all();
+        ->flatten()
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
 
     $topByStory = [];
 
     if (!empty($storyIds)) {
-        // try window function (MySQL 8+, PostgreSQL)
-        try {
-            $ids = implode(',', array_map('intval', $storyIds));
+        $ids = implode(',', array_map('intval', $storyIds));
 
+        try {
+            // إذا DB يدعم window functions
             $sql = "
                 SELECT story_id, name_hashtag, votes FROM (
                     SELECT story_id, name_hashtag, COUNT(*) as votes,
@@ -50,11 +49,11 @@ class NubdhaController extends Controller
             foreach ($rows as $r) {
                 $topByStory[$r->story_id] = [
                     'name_hashtag' => $r->name_hashtag,
-                    'votes' => (int)$r->votes
+                    'votes'        => (int) $r->votes,
                 ];
             }
         } catch (\Throwable $ex) {
-            // fallback: DB doesn't support window functions => do per-story top query (less optimal)
+            // fallback: DB لا يدعم window functions
             foreach ($storyIds as $sId) {
                 $top = DB::table('hashtag_stories')
                     ->select('name_hashtag', DB::raw('COUNT(*) as votes'))
@@ -67,22 +66,35 @@ class NubdhaController extends Controller
                 if ($top) {
                     $topByStory[$sId] = [
                         'name_hashtag' => $top->name_hashtag,
-                        'votes' => (int)$top->votes
+                        'votes'        => (int) $top->votes,
                     ];
                 }
             }
         }
     }
 
-    // 3. attach top hashtag and media_url to each story
-    $nubdhas->transform(function ($nubdha) use ($topByStory) {
+    // 3. جميع المستخدمين (أصحاب النبذات)
+    $userIds = $nubdhas->pluck('user.id')->unique()->all();
+
+    // 4. المتابعين (هل المستخدم الحالي يتابعهم؟)
+    $following = DB::table('followers')
+        ->where('user_id', $meId)
+        ->whereIn('followed_id', $userIds)
+        ->pluck('followed_id')
+        ->toArray();
+
+    // 5. تعديل البيانات قبل الإرجاع
+    $nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
+        // إضافة هل المستخدم الحالي يتابع صاحب النبذة
+        $nubdha->isFollowed = in_array($nubdha->user->id, $following);
+
+        // تعديل كل ستوري
         $nubdha->stories->transform(function ($story) use ($topByStory) {
             $story->top_hashtag = $topByStory[$story->id] ?? null;
-            // add full media url
-            $story->media_url = $story->media_url; // uses accessor
-            // optionally hide internal fields if you use resources
+            $story->media_url   = $story->media_url; // accessor من الموديل
             return $story;
         });
+
         return $nubdha;
     });
 
