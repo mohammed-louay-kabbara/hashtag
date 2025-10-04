@@ -34,7 +34,7 @@ class HashtagController extends Controller
 
                 // جلب كل الـ saves للموديل Hashtag مرة واحدة
                 $savedIds = Save::where('user_id', $meId)
-                    ->where('saveable_type', Hashtag::class) // تأكد أن هذا ما تحفظه في قاعدة البيانات
+                    ->where('saveable_type', 'hashtag') // تأكد أن هذا ما تحفظه في قاعدة البيانات
                     ->whereIn('saveable_id', $ids)
                     ->pluck('saveable_id')
                     ->toArray();
