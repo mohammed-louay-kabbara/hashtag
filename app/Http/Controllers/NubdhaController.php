@@ -76,7 +76,7 @@ class NubdhaController extends Controller
     // 3. جميع المستخدمين (أصحاب النبذات)
     $userIds = $nubdhas->pluck('user.id')->unique()->all();
 
-    dd($userIds);
+    // dd($userIds);
 
     // 4. المتابعين (هل المستخدم الحالي يتابعهم؟)
     $following = DB::table('followers')
