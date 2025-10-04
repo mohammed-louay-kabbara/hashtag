@@ -11,7 +11,21 @@ class HashtagController extends Controller
 
     public function index()
     {
-        $hashtags=hashtag::with('user')->withcount('love')->get();
+    $meId = auth()->id();
+    $hashtags = Hashtag::with('user')
+        ->withCount('loves')
+        ->withCount([
+            'loves as isLiked' => function ($query) use ($meId) {
+                $query->where('user_id', $meId);
+            }
+        ])
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($hashtag) {
+            // نحول is_loved من رقم (0 أو 1) إلى true/false لسهولة التعامل في الواجهة
+            $hashtag->isLiked = $hashtag->isLiked > 0;
+            return $hashtag;
+        });
         return response()->json($hashtags, 200);
     }
 

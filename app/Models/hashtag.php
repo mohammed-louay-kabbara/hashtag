@@ -13,7 +13,15 @@ class hashtag extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function love(){
-      return $this->hasMany(love::class);
-    }   
+    // إذا عندك موديل Love:
+    public function loves()
+    {
+        return $this->hasMany(Love::class, 'hashtag_id');
+    }
+
+    // أو: لو تفضّل علاقة many-to-many للمستخدمين:
+    public function likers()
+    {
+        return $this->belongsToMany(User::class, 'loves', 'hashtag_id', 'user_id')->withTimestamps();
+    }
 }
