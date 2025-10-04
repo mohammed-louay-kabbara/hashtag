@@ -86,15 +86,7 @@ class NubdhaController extends Controller
     // 5. تعديل البيانات قبل الإرجاع
     $nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
         // إضافة هل المستخدم الحالي يتابع صاحب النبذة
-        $nubdha->isFollowed = in_array($nubdha->user->id, $following);
-
-        // تعديل كل ستوري
-        $nubdha->stories->transform(function ($story) use ($topByStory) {
-            $story->top_hashtag = $topByStory[$story->id] ?? null;
-            $story->media_url   = $story->media_url; // accessor من الموديل
-            return $story;
-        });
-
+        $nubdha->is_following = in_array($nubdha->user->id, $following);
         return $nubdha;
     });
 
