@@ -15,12 +15,12 @@ class HashtagController extends Controller
     {
         $meId = auth()->id(); // أو null إن لم يسجل الدخول
             // 1. جلب الهاشتاغات + loves_count (اختياري)
-            $hashtags = Hashtag::with('user')
+            $result = Hashtag::with('user')
                 ->withCount('loves')
                 ->orderByDesc('created_at')
                 ->get();
             // 2. مصفوفة الـ ids
-            $ids = $hashtags->pluck('id')->all();
+            $ids = $result->pluck('id')->all();
 
             $likedIds = [];
             $savedIds = [];
@@ -41,7 +41,7 @@ class HashtagController extends Controller
             }
 
             // 3. ربط النتائج
-            $result = $hashtags->map(function ($h) use ($likedIds, $savedIds) {
+            $hashtags = $result->map(function ($h) use ($likedIds, $savedIds) {
                 $h->isLiked = in_array($h->id, $likedIds, true);   // boolean
                 $h->isSaved = in_array($h->id, $savedIds, true);   // boolean
                 // إن أردت حذف العلاقات الثقيلة قبل الإرسال:
@@ -49,7 +49,7 @@ class HashtagController extends Controller
                 return $h;
             });
 
-            return response()->json($result, 200);
+            return response()->json($hashtags, 200);
     }
 
     public function create()
