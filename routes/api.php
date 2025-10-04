@@ -57,7 +57,7 @@ Route::get('/test', function () {
 
     
 Route::get('/test-notification', function (FirebaseService $firebase) {
-    $deviceToken = 'توكن جهاز الهاتف من FCM';
+    $deviceToken = '';
 
     return $firebase->sendNotification(
         $deviceToken,

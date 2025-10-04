@@ -20,6 +20,7 @@ use App\Models\hashtag;
 use App\Models\nubdha;
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\DB;
+use App\Mail\ResetPasswordCodeMail;
 
 class AuthController extends Controller
 {
@@ -258,23 +259,26 @@ class AuthController extends Controller
 
 public function sendVerificationCode(Request $request)
 {
-    $user = user::where('email', $request->email)->first();
-    if ($user) {
-    $request->validate([
-        'email' => 'required|email'
-    ]);
-    $code = random_int(1000, 9999); // رمز مكون من 4 أرقام
-    session(['email_verification_code' => $code]);
-    Mail::to($request->email)->send(new VerificationCodeMail($code));
-    PasswordResetCustom::create([
-        'email' => $request->email,
-        'otp_code' => $code,
-        'expires_at' => Carbon::now()->format('Y-m-d') ]);
-    return response()->json(['message' => 'تم إرسال رمز التحقق إلى بريدك الإلكتروني.']);
+      $request->validate(['email' => 'required|email']);
+
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if (!$user) {
+        return response()->json(['message' => 'هذا البريد غير مسجل لدينا'], 404);
     }
-    else {
-         return response()->json(['message' => 'الايميل غير موجود'], 401);
-    }
+
+    // توليد كود عشوائي من 6 أرقام
+    $code = rand(100000, 999999);
+
+    // حفظ الكود في جدول reset
+    DB::table('password_resets')->updateOrInsert(
+        ['email' => $request->email],
+        ['token' => $code, 'created_at' => Carbon::now()]
+    );
+
+    // إرسال الإيميل
+    Mail::to($request->email)->send(new ResetPasswordCodeMail($code));
+
+    return response()->json(['message' => 'تم إرسال رمز التحقق إلى بريدك الإلكتروني']);
 }
 
     public function info()
