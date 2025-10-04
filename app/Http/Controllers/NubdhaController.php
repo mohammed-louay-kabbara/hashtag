@@ -14,7 +14,7 @@ class NubdhaController extends Controller
 
     public function index()
     {
-    $meId = auth()->id();
+    $meId = Auth::id();
     // 1. جلب النبذات مع المستخدم والستوريات
     $nubdhas = Nubdha::with(['user', 'stories'])->get();
 
@@ -75,6 +75,8 @@ class NubdhaController extends Controller
 
     // 3. جميع المستخدمين (أصحاب النبذات)
     $userIds = $nubdhas->pluck('user.id')->unique()->all();
+
+    dd($userIds);
 
     // 4. المتابعين (هل المستخدم الحالي يتابعهم؟)
     $following = DB::table('followers')
