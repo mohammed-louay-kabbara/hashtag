@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\hashtag;
+use App\Models\save;
+use App\Models\love;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -11,19 +13,43 @@ class HashtagController extends Controller
 
     public function index()
     {
-    $meId = auth()->id();
+        $meId = auth()->id(); // أو null إن لم يسجل الدخول
+            // 1. جلب الهاشتاغات + loves_count (اختياري)
+            $hashtags = Hashtag::with('user')
+                ->withCount('loves')
+                ->orderByDesc('created_at')
+                ->get();
+            // 2. مصفوفة الـ ids
+            $ids = $hashtags->pluck('id')->all();
 
-    $hashtags = Hashtag::with('user')
-        ->withCount('loves')
-        ->get()
-        ->map(function ($hashtag) use ($meId) {
-            $hashtag->isLiked = $hashtag->loves()
-                ->where('user_id', $meId)
-                ->exists();
-            return $hashtag;
-        });
+            $likedIds = [];
+            $savedIds = [];
 
-        return response()->json($hashtags, 200);
+            if ($meId && !empty($ids)) {
+                // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
+                $likedIds = Love::where('user_id', $meId)
+                    ->whereIn('hashtag_id', $ids)
+                    ->pluck('hashtag_id')
+                    ->toArray();
+
+                // جلب كل الـ saves للموديل Hashtag مرة واحدة
+                $savedIds = Save::where('user_id', $meId)
+                    ->where('saveable_type', Hashtag::class) // تأكد أن هذا ما تحفظه في قاعدة البيانات
+                    ->whereIn('saveable_id', $ids)
+                    ->pluck('saveable_id')
+                    ->toArray();
+            }
+
+            // 3. ربط النتائج
+            $result = $hashtags->map(function ($h) use ($likedIds, $savedIds) {
+                $h->isLiked = in_array($h->id, $likedIds, true);   // boolean
+                $h->isSaved = in_array($h->id, $savedIds, true);   // boolean
+                // إن أردت حذف العلاقات الثقيلة قبل الإرسال:
+                // unset($h->loves);
+                return $h;
+            });
+
+            return response()->json($result, 200);
     }
 
     public function create()
