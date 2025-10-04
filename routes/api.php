@@ -12,6 +12,7 @@ use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\LoveController;
 use App\Http\Controllers\NotificationController;
+use App\Services\FirebaseService;
 
 Route::get('/test', function () {
     return response()->json([
@@ -53,3 +54,14 @@ Route::get('/test', function () {
     Route::resource('love',LoveController::class);
 
     Route::post('/store-device-token', [NotificationController::class, 'storeDeviceToken']);
+
+    
+Route::get('/test-notification', function (FirebaseService $firebase) {
+    $deviceToken = 'توكن جهاز الهاتف من FCM';
+
+    return $firebase->sendNotification(
+        $deviceToken,
+        'مرحبا بك!',
+        'تم إرسال الإشعار بنجاح 🎉'
+    );
+});

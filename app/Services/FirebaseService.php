@@ -22,7 +22,7 @@ class FirebaseService
         $this->accessToken = $credentials->fetchAuthToken()['access_token'];
 
         $this->client = new Client([
-            'base_uri' => 'https://fcm.googleapis.com/v1/projects/YOUR_PROJECT_ID/messages:send',
+            'base_uri' => 'https://fcm.googleapis.com/v1/projects/hashtag-b1a81/messages:send',
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->accessToken,
                 'Content-Type' => 'application/json',
