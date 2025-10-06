@@ -91,15 +91,22 @@ class AuthController extends Controller
 
     public function info_user($id)
     {
+
         $targetUser = User::findOrFail($id);
             $isFollowing = follower::where('user_id', Auth::id())
                     ->where('followed_id', $id)
                     ->exists();
         $targetUser->is_following = $isFollowing;
         // إرجاع البيانات
+        $count_follower=follower::where('followed_id', $targetUser->id)->count();
+        $count_hashtag=hashtag::where('user_id', $targetUser->id)->count();
+        $count_nubdha=nubdha::where('user_id',$targetUser->id)->count();
         return response()->json([
-            'user' => $targetUser
-        ]);
+            'user' => $$targetUser,
+            'count_follower' => $count_follower, 
+            'count_hashtag' => $count_hashtag,
+            'count_nubdha' => $count_nubdha,
+        ], 200);
     }
         public function nubdha_user($id)
         {
