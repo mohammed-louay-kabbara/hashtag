@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\hashtag;
 use App\Models\save;
 use App\Models\love;
+use App\Models\follower;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,7 @@ class HashtagController extends Controller
                     ->whereIn('hashtag_id', $ids)
                     ->pluck('hashtag_id')
                     ->toArray();
-
+                    
                 // جلب كل الـ saves للموديل Hashtag مرة واحدة
                 $savedIds = Save::where('user_id', $meId)
                     ->where('saveable_type', 'hashtag') // تأكد أن هذا ما تحفظه في قاعدة البيانات

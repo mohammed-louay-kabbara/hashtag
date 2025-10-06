@@ -32,7 +32,7 @@ class AuthController extends Controller
         if (! $token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        return $this->respondWithToken($token); 
+        return $this->respondWithToken($token , $email ); 
         }
         return response()->json(['الإيميل غير موجود'], 404);
     }
@@ -194,7 +194,7 @@ class AuthController extends Controller
         return response()->json('تم التعديل بنجاح', 200);
     }
 
-       public function searchusers(Request $request)
+    public function searchusers(Request $request)
     {
         $query = $request->input('query');
         if (strlen($query) < 1) {
@@ -443,8 +443,9 @@ public function verifyResetCode(Request $request)
         return $this->respondWithToken(auth()->refresh());
     }
 
-    protected function respondWithToken($token)
+    protected function respondWithToken($token,$email=null)
     {
+        dd($email);
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
