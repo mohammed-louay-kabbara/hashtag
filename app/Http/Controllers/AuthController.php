@@ -290,7 +290,7 @@ public function sendVerificationCode(Request $request)
 
     public function info()
     {
-        $user=User::get();
+        $user=UserArr::where('id',Auth::id());
         return response()->json($user, 200);
     }
 
