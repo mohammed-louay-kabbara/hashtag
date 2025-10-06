@@ -445,11 +445,11 @@ public function verifyResetCode(Request $request)
 
     protected function respondWithToken($token,$email=null)
     {
-        dd($email);
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'user' => $email
         ]);
     }
     public function destroy($id)
