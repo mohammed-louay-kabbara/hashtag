@@ -102,7 +102,7 @@ class AuthController extends Controller
         $count_hashtag=hashtag::where('user_id', $targetUser->id)->count();
         $count_nubdha=nubdha::where('user_id',$targetUser->id)->count();
         return response()->json([
-            'user' => $$targetUser,
+            'user' => $targetUser,
             'count_follower' => $count_follower, 
             'count_hashtag' => $count_hashtag,
             'count_nubdha' => $count_nubdha,
