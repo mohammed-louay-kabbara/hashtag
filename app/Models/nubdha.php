@@ -21,7 +21,7 @@ class nubdha extends Model
       return $this->hasMany(nubdha_view::class);
     }   
     public function saveable_type()
-        {
-            return $this->morphMany(save::class, 'saveable_type');
-        }
+    {
+      return $this->morphMany(save::class, 'saveable_type');
+    }
 }
