@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -21,8 +22,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
     Relation::morphMap([
-        'nubdha' => 'App\Models\Nubdha',
-        'hashtag' => 'App\Models\Hashtag',
+        'nubdha' => \App\Models\nubdha::class,
+        'hashtag' => \App\Models\hashtag::class,
     ]);
     }
 }
