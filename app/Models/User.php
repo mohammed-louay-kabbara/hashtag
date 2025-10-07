@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -41,6 +42,35 @@ class User extends Authenticatable implements JWTSubject
     public function followers()
     {
         return $this->belongsToMany(User::class, 'followers', 'followed_id', 'user_id');
+    }
+
+        protected $appends = ['is_followed'];
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'followed_id');
+    }
+
+    // ✅ Accessor ذكي
+    protected function isFollowed(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                // إذا كانت الخاصية موجودة مسبقاً (من المجمّع السريع)، لا تعيد الاستعلام
+                if (isset($this->attributes['is_followed'])) {
+                    return $this->attributes['is_followed'];
+                }
+
+                $authId = Auth::id();
+                if (!$authId) return false;
+
+                // استعلام مباشر فقط عند المستخدم الفردي
+                return DB::table('follows')
+                    ->where('follower_id', $authId)
+                    ->where('followed_id', $this->id)
+                    ->exists();
+            }
+        );
     }
 
 

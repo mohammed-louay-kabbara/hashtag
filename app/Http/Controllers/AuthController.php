@@ -176,7 +176,6 @@ class AuthController extends Controller
             ['user_id' => $user->id],
             ['token' => $request->token]
         );
-    
 
         // احفظ أو حدث التوكن الحالي للمستخدم
 
@@ -371,8 +370,6 @@ public function verifyResetCode(Request $request)
         User::where('id',Auth::id())->update([
             'name'=> $request->name,
             'description' => $request->description,
-            
-
         ]);
     }
 

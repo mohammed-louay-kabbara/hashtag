@@ -8,6 +8,8 @@ use App\Models\story;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use App\Traits\WithFollowStatus;
+use App\Models\User;
 
 class NubdhaController extends Controller
 {
@@ -71,21 +73,10 @@ class NubdhaController extends Controller
         }
     }
 
-    // 3. جميع المستخدمين (أصحاب النبذات)
-    $userIds = $nubdhas->pluck('user.id')->unique()->all();
-
-
-    // 4. المتابعين (هل المستخدم الحالي يتابعهم؟)
-    $following = DB::table('followers')
-        ->where('user_id', $meId)
-        ->whereIn('followed_id', $userIds)
-        ->pluck('followed_id')
-        ->toArray();
 
     // 5. تعديل البيانات قبل الإرجاع
 $nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
-    // إضافة هل المستخدم الحالي يتابع صاحب النبذة
-    $nubdha->user->is_following = in_array($nubdha->user->id, $following);
+
 
     // ربط الهاشتاغ الأعلى لكل ستوري
     $nubdha->stories->transform(function ($story) use ($topByStory) {
