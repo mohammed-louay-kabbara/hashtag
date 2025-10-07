@@ -24,4 +24,8 @@ class hashtag extends Model
     {
         return $this->belongsToMany(User::class, 'loves', 'hashtag_id', 'user_id')->withTimestamps();
     }
+         public function saveable_type()
+        {
+            return $this->morphMany(save::class, 'saveable_type');
+        }
 }
