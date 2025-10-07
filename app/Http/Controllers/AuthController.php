@@ -152,9 +152,8 @@ class AuthController extends Controller
 
     public function my_nubdha()
     {
-        $meId = auth()->id();
-        dd($meId);
-        $nubdha=nubdha::where('user_id',$meId)->with('stories')->withcount('nubdha_view')->get();
+        $user_id=Auth::id();
+        $nubdha=nubdha::with('stories')->withcount('nubdha_view')->where('user_id',$user_id)->get();
         return response()->json($nubdha, 200);
     }
     public function my_save(){
