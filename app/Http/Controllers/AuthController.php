@@ -187,13 +187,13 @@ class AuthController extends Controller
         return response()->json($nubdha, 200);
     }
     public function my_save(){
-    $user_id = Auth::id();
+    $user = Auth::user();
     // نجلب المحفوظات مع العلاقة polymorphic
     $saves = save::with('saveable')
-        ->where('user_id', $user_id)
+        ->where('user_id', $user->id)
         ->get();
 
-        $saves->each(function ($save) {
+        $saves->each(function ($save) use ($user_id) {
             if ($save->saveable_type === 'nubdha' && $save->saveable) {
                 $save->saveable->load('stories','user');
             }
@@ -215,9 +215,6 @@ class AuthController extends Controller
         })
         ->values();
     return response()->json($grouped, 200);
-        // $user_id=Auth::id();
-        // $saves=save::where('user_id',$user_id)->get();
-        // return response()->json($saves, 200);
     }
     public function my_hashtag(){
             $meId = auth()->id(); // أو null إن لم يسجل الدخول
