@@ -90,7 +90,7 @@ class NubdhaController extends Controller
 
     // 5. تعديل البيانات قبل الإرجاع
 $nubdhas->transform(function ($nubdha) use ($topByStory,$savedIds) {
-      $h->isSaved = in_array($nubdha->id, $savedIds, true);
+      $nubdha->isSaved = in_array($nubdha->id, $savedIds, true);
     // ربط الهاشتاغ الأعلى لكل ستوري
     $nubdha->stories->transform(function ($story) use ($topByStory) {
         if (isset($topByStory[$story->id])) {
