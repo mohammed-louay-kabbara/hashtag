@@ -193,7 +193,7 @@ class AuthController extends Controller
         ->where('user_id', $user->id)
         ->get();
 
-        $saves->each(function ($save) use ($user_id) {
+        $saves->each(function ($save) use ($user) {
             if ($save->saveable_type === 'nubdha' && $save->saveable) {
                 $save->saveable->load('stories','user');
             }
