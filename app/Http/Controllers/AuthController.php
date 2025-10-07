@@ -192,7 +192,7 @@ class AuthController extends Controller
     $saves = Save::with('saveable')
         ->where('user_id', $user_id)
         ->get();
-        
+        return response()->json($saves, 200);
     // نعيد ترتيبها وتجميعها حسب نوع العنصر
     $grouped = $saves->groupBy('saveable_type')
         ->map(function ($group, $type) {
