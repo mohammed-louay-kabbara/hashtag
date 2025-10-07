@@ -176,7 +176,8 @@ $nubdhas->transform(function ($nubdha) use ($topByStory) {
                     }
                     $story->delete();
                 }
-            $nubdha->delete();
+                save::where('saveable_type','nubdha')->where('saveable_id',$nubdha->id)->delete();
+                $nubdha->delete();
             }
         return response()->json(['تم الحذف بنجاح'], 200);
     }

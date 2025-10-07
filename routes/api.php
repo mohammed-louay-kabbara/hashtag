@@ -21,6 +21,7 @@ Route::get('/test', function () {
     ]);
 });
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('editprofile', [AuthController::class, 'editprofile']);
     Route::get('info', [AuthController::class, 'info']);
     Route::post('editpassword', [AuthController::class, 'editpassword']);
     Route::post('forgotpassword', [AuthController::class, 'forgot_password']);

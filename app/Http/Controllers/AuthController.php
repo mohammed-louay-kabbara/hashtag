@@ -427,10 +427,30 @@ public function verifyResetCode(Request $request)
 
     public function editprofile(Request $request)
     {
-        User::where('id',Auth::id())->update([
+        $user = Auth::user();
+        if ($request->picture)
+        {
+            
+            $imagePath = $request->file('picture')->store('profile_pictures', 'public');
+            if ($user->picture=="profile_pictures/defoult_image.jpg") {
+                $user->update([
+                'picture' => $imagePath,
+                'name'=> $request->name,
+                'description' => $request->description,
+                ]);
+                return response()->json(['تم تعديل الصورة بنجاح'], 200);
+            }
+            elseif ($user->picture && Storage::disk('public')->exists($user->picture)) {
+                Storage::disk('public')->delete($user->picture);
+                $user->update(['picture' => $imagePath ]);
+            return response()->json(['تم تعديل الصورة بنجاح'], 200);
+            }    
+        }
+        $user->update([
             'name'=> $request->name,
             'description' => $request->description,
         ]);
+         return response()->json(['تم تعديل الصورة بنجاح'], 200);
     }
 
     public function editprofile_admin(Request $request)
