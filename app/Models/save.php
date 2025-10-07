@@ -14,4 +14,8 @@ class save extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function saveable()
+    {
+        return $this->morphTo();
+    }
 }

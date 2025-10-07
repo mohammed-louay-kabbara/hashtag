@@ -187,9 +187,26 @@ class AuthController extends Controller
         return response()->json($nubdha, 200);
     }
     public function my_save(){
-        $user_id=Auth::id();
-        $saves=save::where('user_id',$user_id)->get();
-        return response()->json($saves, 200);
+    $user_id = Auth::id();
+    // نجلب المحفوظات مع العلاقة polymorphic
+    $saves = Save::with('saveable')
+        ->where('user_id', $user_id)
+        ->get();
+    // نعيد ترتيبها وتجميعها حسب نوع العنصر
+    $grouped = $saves->groupBy('saveable_type')
+        ->map(function ($group, $type) {
+            return [
+                'saveable_type' => class_basename($type), // مثل "Hashtag" أو "Nubdha"
+                'items' => $group->map(function ($save) {
+                    return $save->saveable; // نعيد فقط العنصر المرتبط
+                })->values()
+            ];
+        })
+        ->values();
+    return response()->json($grouped, 200);
+        // $user_id=Auth::id();
+        // $saves=save::where('user_id',$user_id)->get();
+        // return response()->json($saves, 200);
     }
     public function my_hashtag(){
             $meId = auth()->id(); // أو null إن لم يسجل الدخول
