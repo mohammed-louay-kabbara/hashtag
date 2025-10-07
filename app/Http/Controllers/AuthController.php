@@ -189,10 +189,20 @@ class AuthController extends Controller
     public function my_save(){
     $user_id = Auth::id();
     // نجلب المحفوظات مع العلاقة polymorphic
-    $saves = Save::with('saveable')
+    $saves = save::with('saveable')
         ->where('user_id', $user_id)
         ->get();
-        return response()->json($saves, 200);
+
+        $saves->each(function ($save) use ($user) {
+            if ($save->saveable_type === 'nubdha' && $save->saveable) {
+                $save->saveable->load('stories','user');
+            }
+            else{
+                  $save->saveable->load('user');
+            }
+        });
+
+
     // نعيد ترتيبها وتجميعها حسب نوع العنصر
     $grouped = $saves->groupBy('saveable_type')
         ->map(function ($group, $type) {
