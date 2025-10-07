@@ -15,17 +15,13 @@ class HashtagController extends Controller
     public function index()
     {
         $meId = auth()->id(); // أو null إن لم يسجل الدخول
-            // 1. جلب الهاشتاغات + loves_count (اختياري)
             $result = Hashtag::with('user')
                 ->withCount('loves')
                 ->orderByDesc('created_at')
                 ->get();
-            // 2. مصفوفة الـ ids
             $ids = $result->pluck('id')->all();
-
             $likedIds = [];
             $savedIds = [];
-
             if ($meId && !empty($ids)) {
                 // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
                 $likedIds = Love::where('user_id', $meId)
@@ -49,8 +45,7 @@ class HashtagController extends Controller
                 // unset($h->loves);
                 return $h;
             });
-
-            return response()->json($hashtags, 200);
+        return response()->json($hashtags, 200);
     }
 
     public function create()

@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 use App\Mail\VerificationCodeMail;
 use App\Models\follower;
 use App\Models\save;
+use App\Models\Love;
 use App\Models\hashtag;
 use App\Models\nubdha;
 use App\Models\DeviceToken;
@@ -161,9 +162,38 @@ class AuthController extends Controller
         return response()->json($saves, 200);
     }
     public function my_hashtag(){
-        $user_id=Auth::id();
-        $hashtag=hashtag::where('user_id',$user_id)->get();
-        return response()->json($hashtag, 200);
+                $meId = auth()->id(); // أو null إن لم يسجل الدخول
+            $result = Hashtag::with('user')
+                ->withCount('loves')
+                ->orderByDesc('created_at')
+                ->where('user_id',$meId)->get();;
+            $ids = $result->pluck('id')->all();
+            $likedIds = [];
+            $savedIds = [];
+            if ($meId && !empty($ids)) {
+                // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
+                $likedIds = Love::where('user_id', $meId)
+                    ->whereIn('hashtag_id', $ids)
+                    ->pluck('hashtag_id')
+                    ->toArray();
+                    
+                // جلب كل الـ saves للموديل Hashtag مرة واحدة
+                $savedIds = Save::where('user_id', $meId)
+                    ->where('saveable_type', 'hashtag') // تأكد أن هذا ما تحفظه في قاعدة البيانات
+                    ->whereIn('saveable_id', $ids)
+                    ->pluck('saveable_id')
+                    ->toArray();
+            }
+
+            // 3. ربط النتائج
+            $hashtags = $result->map(function ($h) use ($likedIds, $savedIds) {
+                $h->isLiked = in_array($h->id, $likedIds, true);   // boolean
+                $h->isSaved = in_array($h->id, $savedIds, true);   // boolean
+                // إن أردت حذف العلاقات الثقيلة قبل الإرسال:
+                // unset($h->loves);
+                return $h;
+            });
+        return response()->json($hashtags, 200);
     }
 
     public function storeDeviceToken(Request $request)
