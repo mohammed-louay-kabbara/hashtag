@@ -83,11 +83,24 @@ class NubdhaController extends Controller
         ->toArray();
 
     // 5. تعديل البيانات قبل الإرجاع
-    $nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
-        // إضافة هل المستخدم الحالي يتابع صاحب النبذة
-        $nubdha->user->is_following = in_array($nubdha->user->id, $following);
-        return $nubdha;
+$nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
+    // إضافة هل المستخدم الحالي يتابع صاحب النبذة
+    $nubdha->user->is_following = in_array($nubdha->user->id, $following);
+
+    // ربط الهاشتاغ الأعلى لكل ستوري
+    $nubdha->stories->transform(function ($story) use ($topByStory) {
+        if (isset($topByStory[$story->id])) {
+            $story->top_hashtag = $topByStory[$story->id]['name_hashtag'];
+            $story->hashtag_votes = $topByStory[$story->id]['votes'];
+        } else {
+            $story->top_hashtag = null;
+            $story->hashtag_votes = 0;
+        }
+        return $story;
     });
+
+    return $nubdha;
+});
 
     return response()->json($nubdhas, 200);
     }
