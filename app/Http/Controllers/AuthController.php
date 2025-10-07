@@ -162,7 +162,7 @@ class AuthController extends Controller
         return response()->json($saves, 200);
     }
     public function my_hashtag(){
-                $meId = auth()->id(); // أو null إن لم يسجل الدخول
+            $meId = auth()->id(); // أو null إن لم يسجل الدخول
             $result = Hashtag::with('user')
                 ->withCount('loves')
                 ->orderByDesc('created_at')
