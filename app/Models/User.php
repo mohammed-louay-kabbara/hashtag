@@ -65,13 +65,14 @@ class User extends Authenticatable implements JWTSubject
                 if (!$authId) return false;
 
                 // استعلام مباشر فقط عند المستخدم الفردي
-                return DB::table('follows')
+                return DB::table('followers')
                     ->where('follower_id', $authId)
                     ->where('followed_id', $this->id)
                     ->exists();
             }
         );
     }
+    
 
 
 

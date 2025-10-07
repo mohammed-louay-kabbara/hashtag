@@ -15,7 +15,7 @@ trait WithFollowStatus
         $query = $query ?? static::query();
 
         // جلب جميع المستخدمين الذين يتابعهم المستخدم الحالي
-        $followedIds = DB::table('follows')
+        $followedIds = DB::table('followers')
             ->where('follower_id', $meId)
             ->pluck('followed_id')
             ->toArray();
