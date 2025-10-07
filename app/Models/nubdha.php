@@ -20,8 +20,8 @@ class nubdha extends Model
     public function nubdha_view(){
       return $this->hasMany(nubdha_view::class);
     }   
-    public function saveable_type()
+    public function saves()
     {
-      return $this->morphMany(save::class, 'saveable_type');
+        return $this->morphMany(Save::class, 'saveable');
     }
 }
