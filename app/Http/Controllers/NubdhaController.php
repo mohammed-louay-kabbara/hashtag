@@ -74,9 +74,9 @@ class NubdhaController extends Controller
     }
 
 
-    // 5. تعديل البيانات قبل الإرجاع
-$nubdhas->transform(function ($nubdha) use ($topByStory, $following) {
 
+    // 5. تعديل البيانات قبل الإرجاع
+$nubdhas->transform(function ($nubdha) use ($topByStory) {
 
     // ربط الهاشتاغ الأعلى لكل ستوري
     $nubdha->stories->transform(function ($story) use ($topByStory) {
