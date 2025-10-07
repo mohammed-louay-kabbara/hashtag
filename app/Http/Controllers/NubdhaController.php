@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Traits\WithFollowStatus;
 use App\Models\User;
+use App\Models\Save;
 
 class NubdhaController extends Controller
 {
@@ -26,7 +27,19 @@ class NubdhaController extends Controller
         ->values()
         ->all();
 
-    $topByStory = [];
+        $ids = $nubdhas->pluck('id')->all();
+        $topByStory = [];
+        $savedIds = [];
+            if ($meId && !empty($ids)) {
+                // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
+                    
+                // جلب كل الـ saves للموديل Hashtag مرة واحدة
+                $savedIds = Save::where('user_id', $meId)
+                    ->where('saveable_type', 'nubdha') // تأكد أن هذا ما تحفظه في قاعدة البيانات
+                    ->whereIn('saveable_id', $ids)
+                    ->pluck('saveable_id')
+                    ->toArray();
+            }
 
     if (!empty($storyIds)) {
         $ids = implode(',', array_map('intval', $storyIds));
@@ -76,8 +89,8 @@ class NubdhaController extends Controller
 
 
     // 5. تعديل البيانات قبل الإرجاع
-$nubdhas->transform(function ($nubdha) use ($topByStory) {
-
+$nubdhas->transform(function ($nubdha) use ($topByStory,$savedIds) {
+      $h->isSaved = in_array($nubdha->id, $savedIds, true);
     // ربط الهاشتاغ الأعلى لكل ستوري
     $nubdha->stories->transform(function ($story) use ($topByStory) {
         if (isset($topByStory[$story->id])) {
