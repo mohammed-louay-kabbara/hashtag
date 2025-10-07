@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-    Relation::enforceMorphMap([
+    Relation::morphMap([
         'nubdha' => \App\Models\nubdha::class,
         'hashtag' => \App\Models\hashtag::class,
     ]);
