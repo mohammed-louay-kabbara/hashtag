@@ -72,7 +72,11 @@ class AuthController extends Controller
 
     public function fcm_token(Request $request)
     {
-
+        DeviceToken::create([
+            'user_id' => Auth::id(),
+            'token' => $request->token,
+        ]);
+        return response()->json(['تم إضافة التوكن'], 200);
     }
 
     public function pictureupdate(Request $request)
@@ -92,7 +96,6 @@ class AuthController extends Controller
 
     public function info_user($id)
     {
-
         $targetUser = User::findOrFail($id);
             $isFollowing = follower::where('user_id', Auth::id())
                     ->where('followed_id', $id)
@@ -192,7 +195,6 @@ class AuthController extends Controller
     $saves = save::with('saveable')
         ->where('user_id', $user->id)
         ->get();
-
         $saves->each(function ($save) use ($user) {
             if ($save->saveable_type === 'nubdha' && $save->saveable) {
                 $save->saveable->load('stories','user');
