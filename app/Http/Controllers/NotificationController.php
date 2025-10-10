@@ -12,7 +12,7 @@ class NotificationController extends Controller
 
     public function index()
     {
-       $notification=notification::where('id',Auth::id())->orderByDesc('created_at')->get();
+       $notification=notification::where('id',Auth::id())->with(['user','sender'])->orderByDesc('created_at')->get();
         return response()->json($notification, 200);
     }
     public function storeDeviceToken(Request $request)
