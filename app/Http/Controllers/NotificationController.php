@@ -70,7 +70,7 @@ class NotificationController extends Controller
     }
     public function read($id)
     {
-        notification::where('user_id',Auth::id())->update(['read_at'=> now()]);
+        notification::where('id',$id)->update(['read_at'=> now()]);
         return response()->json(['تم قراءة الإشعار'], 200);
     }
 
@@ -79,7 +79,7 @@ class NotificationController extends Controller
      */
     public function destroy($id)
     {
-        notification::where('user_id',Auth::id())->delete();
+        notification::where('id',$id)->delete();
         return response()->json(['تم حذف الإشعار'], 200);
     }
 }
