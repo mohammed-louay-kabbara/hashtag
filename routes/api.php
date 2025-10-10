@@ -47,7 +47,7 @@ Route::get('/test', function () {
     Route::resource('Nubdha',NubdhaController::class);
     Route::post('nubdhaupdate',[NubdhaController::class,'update']);
     Route::resource('save',SaveController::class);
-    Route::resource('notification',NotificationController::class);
+    Route::get('notification',[NotificationController::class,'index']);
     Route::resource('report',ReportController::class);
     Route::resource('nubdha_views',NubdhaViewController::class);
     Route::resource('hashtagstory',HashtagStoryController::class);
