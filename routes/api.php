@@ -49,7 +49,7 @@ Route::get('/test', function () {
     Route::resource('save',SaveController::class);
     Route::get('notification',[NotificationController::class,'index']);
     Route::delete('notification_delete/{id}',[NotificationController::class,'destroy']);
-    Route::put('notification',[NotificationController::class,'index']);
+    Route::put('notification_read',[NotificationController::class,'read']);
     Route::resource('report',ReportController::class);
     Route::resource('nubdha_views',NubdhaViewController::class);
     Route::resource('hashtagstory',HashtagStoryController::class);
