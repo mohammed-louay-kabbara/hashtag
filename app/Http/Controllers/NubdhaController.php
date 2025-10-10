@@ -14,12 +14,14 @@ use App\Models\Save;
 
 class NubdhaController extends Controller
 {
-
     public function index()
-    {
+{
     $meId = Auth::id();
+
+    // 1️⃣ جلب جميع النبذات مع المستخدم والستوريات المرتبطة
     $nubdhas = Nubdha::with(['user', 'stories'])->get();
 
+    // 2️⃣ استخراج كل story_id من النبذات
     $storyIds = $nubdhas->pluck('stories.*.id')
         ->flatten()
         ->filter()
@@ -27,31 +29,31 @@ class NubdhaController extends Controller
         ->values()
         ->all();
 
-        $ids = $nubdhas->pluck('id')->all();
-        $topByStory = [];
-        $savedIds = [];
-            if ($meId && !empty($ids)) {
-                // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
-                    
-                // جلب كل الـ saves للموديل Hashtag مرة واحدة
-                $savedIds = Save::where('user_id', $meId)
-                    ->where('saveable_type', 'nubdha') // تأكد أن هذا ما تحفظه في قاعدة البيانات
-                    ->whereIn('saveable_id', $ids)
-                    ->pluck('saveable_id')
-                    ->toArray();
-            }
+    $ids = $nubdhas->pluck('id')->all();
 
+    // 3️⃣ جلب الـ saves الخاصة بالمستخدم الحالي
+    $savedIds = [];
+    if ($meId && !empty($ids)) {
+        $savedIds = Save::where('user_id', $meId)
+            ->where('saveable_type', 'nubdha')
+            ->whereIn('saveable_id', $ids)
+            ->pluck('saveable_id')
+            ->toArray();
+    }
+
+    // 4️⃣ جلب الهاشتاغ الأعلى لكل ستوري
+    $topByStory = [];
     if (!empty($storyIds)) {
-        $ids = implode(',', array_map('intval', $storyIds));
+        $idsStr = implode(',', array_map('intval', $storyIds));
 
         try {
-            // إذا DB يدعم window functions
+            // استخدام Window Function إن كانت مدعومة
             $sql = "
                 SELECT story_id, name_hashtag, votes FROM (
                     SELECT story_id, name_hashtag, COUNT(*) as votes,
                            ROW_NUMBER() OVER (PARTITION BY story_id ORDER BY COUNT(*) DESC) AS rn
                     FROM hashtag_stories
-                    WHERE story_id IN ($ids)
+                    WHERE story_id IN ($idsStr)
                     GROUP BY story_id, name_hashtag
                 ) t
                 WHERE rn = 1
@@ -62,52 +64,68 @@ class NubdhaController extends Controller
             foreach ($rows as $r) {
                 $topByStory[$r->story_id] = [
                     'name_hashtag' => $r->name_hashtag,
-                    'votes'        => (int) $r->votes,
+                    'votes' => (int) $r->votes,
                 ];
             }
         } catch (\Throwable $ex) {
-            // fallback: DB لا يدعم window functions
-            foreach ($storyIds as $sId) {
-                $top = DB::table('hashtag_stories')
-                    ->select('name_hashtag', DB::raw('COUNT(*) as votes'))
-                    ->where('story_id', $sId)
-                    ->groupBy('name_hashtag')
-                    ->orderByDesc('votes')
-                    ->limit(1)
-                    ->first();
-
-                if ($top) {
-                    $topByStory[$sId] = [
+            // fallback في حال قاعدة البيانات لا تدعم window functions
+            $topByStory = DB::table('hashtag_stories')
+                ->select('story_id', DB::raw('name_hashtag, COUNT(*) as votes'))
+                ->whereIn('story_id', $storyIds)
+                ->groupBy('story_id', 'name_hashtag')
+                ->get()
+                ->groupBy('story_id')
+                ->map(function ($group) {
+                    $top = $group->sortByDesc('votes')->first();
+                    return [
                         'name_hashtag' => $top->name_hashtag,
-                        'votes'        => (int) $top->votes,
+                        'votes' => (int) $top->votes,
                     ];
-                }
-            }
+                })
+                ->toArray();
         }
     }
 
+    // 5️⃣ جلب الهاشتاغ الذي أضافه المستخدم نفسه
+    $userHashtags = [];
+    if ($meId && !empty($storyIds)) {
+        $rows = DB::table('hashtag_stories')
+            ->select('story_id', 'name_hashtag')
+            ->where('user_id', $meId)
+            ->whereIn('story_id', $storyIds)
+            ->get();
 
-
-    // 5. تعديل البيانات قبل الإرجاع
-$nubdhas->transform(function ($nubdha) use ($topByStory,$savedIds) {
-      $nubdha->isSaved = in_array($nubdha->id, $savedIds, true);
-    // ربط الهاشتاغ الأعلى لكل ستوري
-    $nubdha->stories->transform(function ($story) use ($topByStory) {
-        if (isset($topByStory[$story->id])) {
-            $story->top_hashtag = $topByStory[$story->id]['name_hashtag'];
-            $story->hashtag_votes = $topByStory[$story->id]['votes'];
-        } else {
-            $story->top_hashtag = null;
-            $story->hashtag_votes = 0;
+        foreach ($rows as $r) {
+            $userHashtags[$r->story_id] = $r->name_hashtag;
         }
-        return $story;
+    }
+
+    // 6️⃣ تجهيز البيانات قبل الإرجاع
+    $nubdhas->transform(function ($nubdha) use ($topByStory, $savedIds, $userHashtags) {
+        $nubdha->isSaved = in_array($nubdha->id, $savedIds, true);
+
+        $nubdha->stories->transform(function ($story) use ($topByStory, $userHashtags) {
+            // الهاشتاغ الأعلى
+            if (isset($topByStory[$story->id])) {
+                $story->top_hashtag = $topByStory[$story->id]['name_hashtag'];
+                $story->hashtag_votes = $topByStory[$story->id]['votes'];
+            } else {
+                $story->top_hashtag = null;
+                $story->hashtag_votes = 0;
+            }
+
+            // الهاشتاغ الذي أضافه المستخدم الحالي
+            $story->user_hashtag = $userHashtags[$story->id] ?? null;
+
+            return $story;
+        });
+
+        return $nubdha;
     });
 
-    return $nubdha;
-});
-
+    // 7️⃣ إرجاع النتيجة النهائية
     return response()->json($nubdhas, 200);
-    }
+}
 
     public function create()
     {

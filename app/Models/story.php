@@ -19,6 +19,10 @@ class story extends Model
     {
         return $this->hasMany(HashtagStory::class, 'story_id');
     }
+    public function hashtagStories()
+    {
+        return $this->hasMany(HashtagStory::class, 'story_id');
+    }
 
     // Accessor to get full URL for media
     public function getMediaUrlAttribute()
