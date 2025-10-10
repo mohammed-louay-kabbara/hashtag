@@ -458,8 +458,9 @@ public function verifyResetCode(Request $request)
         if ($request->picture)
         {
             
-            $imagePath = $request->file('picture')->store('profile_pictures', 'public');
+            
             if ($user->picture=="profile_pictures/defoult_image.jpg") {
+                $imagePath = $request->file('picture')->store('profile_pictures', 'public');
                 $user->update([
                 'picture' => $imagePath,
                 'name'=> $request->name,
@@ -469,6 +470,7 @@ public function verifyResetCode(Request $request)
             }
             elseif ($user->picture && Storage::disk('public')->exists($user->picture)) {
                 Storage::disk('public')->delete($user->picture);
+                 $imagePath = $request->file('picture')->store('profile_pictures', 'public');
                 $user->update(['picture' => $imagePath ]);
             return response()->json(['تم تعديل الصورة بنجاح'], 200);
             }    
