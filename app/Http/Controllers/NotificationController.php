@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeviceToken;
+use App\Models\notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,7 +12,8 @@ class NotificationController extends Controller
 
     public function index()
     {
-        
+       $notification=notification::where('id',Auth::id())->orderByDesc('created_at')->get();
+        return response()->json($notification, 200);
     }
     public function storeDeviceToken(Request $request)
     {
