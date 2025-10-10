@@ -48,6 +48,8 @@ Route::get('/test', function () {
     Route::post('nubdhaupdate',[NubdhaController::class,'update']);
     Route::resource('save',SaveController::class);
     Route::get('notification',[NotificationController::class,'index']);
+    Route::delete('notification_delete/{id}',[NotificationController::class,'destroy']);
+    Route::put('notification',[NotificationController::class,'index']);
     Route::resource('report',ReportController::class);
     Route::resource('nubdha_views',NubdhaViewController::class);
     Route::resource('hashtagstory',HashtagStoryController::class);
