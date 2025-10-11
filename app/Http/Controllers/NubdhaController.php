@@ -186,7 +186,7 @@ class NubdhaController extends Controller
             $story->update([
                 'media' => $path,
                 'type' => $type,
-                'caption' => $request->captions ?? null
+                'caption' => $request->caption
             ]);
         }
         else {

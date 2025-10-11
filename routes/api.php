@@ -13,6 +13,7 @@ use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\LoveController;
 use App\Http\Controllers\NotificationController;
 use App\Services\FirebaseService;
+use App\Models\notification;
 
 Route::get('/test', function () {
     return response()->json([
@@ -64,9 +65,17 @@ Route::get('/test', function () {
 Route::get('/test-notification', function (FirebaseService $firebase) {
     $deviceToken = 'fX7GtzW-R_SnQriKX2tHKD:APA91bEm-Zr8gpdphfCXvcX-IUZTMrqO3GXJmR2WJQ9TIXwScHV0IqN-d0NHwbBGOrQwVS2qetptvIMCBQ8iKxNkL8TRQQJnYfL8ku0gxyhQ_e2XkPXZ17c';
 
+    notification::create([
+        'user_id' =>2,
+        'title' => 'إعجاب',
+        'body' => 'لقد نال هاشتاغك على إعجاب',
+        'sender_id' => 6
+    ]);
+
     return $firebase->sendNotification(
         $deviceToken,
-        'مرحبا بك!',
-        'تم إرسال الإشعار بنجاح 🎉'
+        'إعجاب',
+        'لقد نال هاشتاغك على إعجاب'
     );
+
 });

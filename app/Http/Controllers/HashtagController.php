@@ -102,6 +102,7 @@ class HashtagController extends Controller
     public function destroy($id)
     {
         hashtag::where('id',$id)->delete();
+        save::where('saveable_type','hashtag')->where('saveable_id',$id)->delete();
         return response()->json(['تم الحذف بنجاح'], 200);
         
     }
