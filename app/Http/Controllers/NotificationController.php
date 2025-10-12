@@ -21,6 +21,11 @@ class NotificationController extends Controller
         'token' => 'required|string',
         ]);
         $user = Auth::user();
+        $isDeviceToken=DeviceToken::where('user_id',$user->id)->first();
+        if ($isDeviceToken) {
+            $isDeviceToken->update(['token' => $request->token]);
+            return response()->json(['message' => 'تم حفظ التوكن بنجاح'], 200);
+        }
         // احفظ أو حدث التوكن الحالي للمستخدم
         DeviceToken::updateOrCreate(
         ['user_id' => $user->id],

@@ -63,8 +63,8 @@ Route::get('/test', function () {
 
     
 Route::get('/test-notification', function (FirebaseService $firebase) {
-    $deviceToken = 'dr0AfdH2T7axsBQEMXhpRV:APA91bEP-kc88hI5MT0B5EfeBQ2yl0y7YhuGQXPzdCnNk5wYaU6VX-JlSKLvUH9tWuIH_m8KRHsYPCznRLQBfYs_QLR9eB727r1FuZ9WBQgM4q8pbNbGEsY';
-
+    $deviceToken = 'f_mt4PXzR7u2sUWIQciQ5P:APA91bGj49kk3zMl6U-P9dufTY48mXpWPcEckDM8YNCL1qUa2vrz1XS-tG9kD1iNgmGuRyEOVz7EiUZdgBP-WDSNyXhlVjK9OtQVB0phUMqXVWQeMu2JKbA';
+    
     notification::create([
         'user_id' =>2,
         'title' => 'إعجاب',
