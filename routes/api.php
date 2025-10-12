@@ -63,7 +63,8 @@ Route::get('/test', function () {
 
     
 Route::get('/test-notification', function (FirebaseService $firebase) {
-    $deviceToken = 'f_mt4PXzR7u2sUWIQciQ5P:APA91bGj49kk3zMl6U-P9dufTY48mXpWPcEckDM8YNCL1qUa2vrz1XS-tG9kD1iNgmGuRyEOVz7EiUZdgBP-WDSNyXhlVjK9OtQVB0phUMqXVWQeMu2JKbA';
+    $deviceToken = 'ddyqJOkeTbmAruf_DyWg7n:APA91bGGlCrccNNO17WDxk5yxaTOLBdOD1dXChP1sH5Q8TQsdK0nkxC31TPR6v8qbN_Hdpl85iHtQoYgnT2W2QA8cxYb8wKZoZ8teInnVh45hpoJ5dVEbFM';
+    
     
     notification::create([
         'user_id' =>2,
