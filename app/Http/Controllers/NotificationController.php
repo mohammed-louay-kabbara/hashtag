@@ -21,6 +21,7 @@ class NotificationController extends Controller
         'token' => 'required|string',
         ]);
         $user = Auth::user();
+        dd($user->id);
         $isDeviceToken=DeviceToken::where('user_id',$user->id)->first();
         if ($isDeviceToken) {
             $isDeviceToken->update(['token' => $request->token]);
