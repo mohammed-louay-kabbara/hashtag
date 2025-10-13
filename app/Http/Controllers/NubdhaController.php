@@ -19,7 +19,7 @@ class NubdhaController extends Controller
     $meId = Auth::id();
 
     // 1️⃣ جلب جميع النبذات مع المستخدم والستوريات المرتبطة
-    $nubdhas = Nubdha::with(['user', 'stories'])->get();
+    $nubdhas = Nubdha::with(['user', 'stories'])->withcount('nubdha_view')->get();
 
     // 2️⃣ استخراج كل story_id من النبذات
     $storyIds = $nubdhas->pluck('stories.*.id')

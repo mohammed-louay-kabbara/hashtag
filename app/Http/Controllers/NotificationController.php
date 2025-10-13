@@ -28,8 +28,8 @@ class NotificationController extends Controller
         }
         // احفظ أو حدث التوكن الحالي للمستخدم
         DeviceToken::create(
-        ['user_id' => $user->id],
-        ['token' => $request->token]
+        ['user_id' => $user->id,
+        'token' => $request->token]
         );
         return response()->json(['message' => 'تم حفظ التوكن بنجاح'], 200);
     }
