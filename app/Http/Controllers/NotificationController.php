@@ -27,7 +27,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'تم حفظ التوكن بنجاح'], 200);
         }
         // احفظ أو حدث التوكن الحالي للمستخدم
-        DeviceToken::updateOrCreate(
+        DeviceToken::create(
         ['user_id' => $user->id],
         ['token' => $request->token]
         );
