@@ -14,6 +14,7 @@ use App\Http\Controllers\LoveController;
 use App\Http\Controllers\NotificationController;
 use App\Services\FirebaseService;
 use App\Models\notification;
+use App\Models\DeviceToken;
 
 Route::get('/test', function () {
     return response()->json([
@@ -63,8 +64,8 @@ Route::get('/test', function () {
 
     
 Route::get('/test-notification', function (FirebaseService $firebase) {
-    $deviceToken = 'cvKpbAIVSQCtxhK64OKLRf:APA91bFPXwSFFVzHyf5HddsAUPrnuhIWHDu0eW3jcUXKP6h3aKSU8ajsQG1h0xaSlOpeLU558PujKkMLGtJGgQxJKayGaGUf2l38bsQJWUYAthvkBdzbcRA';
-    
+    $Token=DeviceToken::where('user_id',2)->first();
+    $deviceToken = $Token->token;    
     
     notification::create([
         'user_id' =>2,
