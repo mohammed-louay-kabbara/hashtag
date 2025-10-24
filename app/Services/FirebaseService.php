@@ -30,22 +30,24 @@ class FirebaseService
         ]);
     }
 
-    public function sendNotification($token, $title, $body,$type,$target_id=null)
-    {
-        $response = $this->client->post('', [
-            'json' => [
-                'message' => [
-                    'token' => $token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'type' => $type,
-                        'target_id' => $target_id
-                    ],
+public function sendNotification($token, $title, $body, $type, $target_id = null)
+{
+    $response = $this->client->post('', [
+        'json' => [
+            'message' => [
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body,
+                ],
+                'data' => [
+                    'type' => $type,
+                    'target_id' => $target_id,
                 ],
             ],
-        ]);
+        ],
+    ]);
 
-        return json_decode($response->getBody(), true);
-    }
+    return json_decode($response->getBody(), true);
+}
 }
