@@ -41,8 +41,8 @@ public function sendNotification($token, $title, $body, $type, $target_id = null
                     'body' => $body,
                 ],
                 'data' => [
-                    'type' => $type,
-                    'target_id' => $target_id,
+                    'type' => (string) $type,
+                    'target_id' => (string) $target_id, // تحويل إلى نص
                 ],
             ],
         ],
