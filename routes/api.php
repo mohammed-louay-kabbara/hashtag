@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Services\FirebaseService;
 use App\Models\notification;
 use App\Models\DeviceToken;
+use App\Models\Nabza;
 
 Route::get('/test', function () {
     return response()->json([
@@ -63,7 +64,28 @@ Route::get('/test', function () {
     Route::post('/store-device-token', [NotificationController::class, 'storeDeviceToken']);
 
     
-Route::get('/test-notification', function (FirebaseService $firebase) {
+Route::get('/nubdha-notification', function (FirebaseService $firebase) {
+    $Token=DeviceToken::where('user_id',2)->first();
+    $deviceToken = $Token->token;    
+    
+    notification::create([
+        'user_id' =>2,
+        'title' => 'تفاعل',
+        'body' => 'لقد نال نبزتك على تفاعل',
+        'sender_id' => 6
+    ]); 
+
+    return $firebase->sendNotification(
+        $deviceToken,
+        'تفاعل',
+        'لقد نال نبزتك على تفاعل',
+        'open_nabza_profile',
+        2
+    );
+
+});
+
+Route::get('/love-notification', function (FirebaseService $firebase) {
     $Token=DeviceToken::where('user_id',2)->first();
     $deviceToken = $Token->token;    
     
@@ -77,7 +99,29 @@ Route::get('/test-notification', function (FirebaseService $firebase) {
     return $firebase->sendNotification(
         $deviceToken,
         'إعجاب',
-        'لقد نال هاشتاغك على إعجاب'
+        'لقد نال هاشتاغك على إعجاب',
+        'open_profile_hashtags'
+    );
+
+});
+
+Route::get('/profile-notification', function (FirebaseService $firebase) {
+    $Token=DeviceToken::where('user_id',2)->first();
+    $deviceToken = $Token->token;    
+    
+    notification::create([
+        'user_id' =>2,
+        'title' => 'متابعة',
+        'body' => 'لقد تمت متابعتك من قبل',
+        'sender_id' => 6
+    ]);
+
+    return $firebase->sendNotification(
+        $deviceToken,
+        'متابعة',
+        'لقد تمت متابعتك من قبل',
+        'open_profile_follow',
+        6
     );
 
 });

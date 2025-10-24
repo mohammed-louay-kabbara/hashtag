@@ -132,6 +132,18 @@ class NubdhaController extends Controller
         
     }
 
+    public function showPublic($id)
+    {
+        $nabza = Nabza::with(['user', 'stories'])->find($id);
+
+        if (!$nabza) {
+            abort(404);
+        }
+
+        // ✅ إذا لم يكن التطبيق مثبّت، أظهر صفحة HTML بسيطة
+        return view('public', ['nabza' => $nabza]);
+    }
+
 
     public function store(Request $request)
     {

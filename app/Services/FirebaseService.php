@@ -30,7 +30,7 @@ class FirebaseService
         ]);
     }
 
-    public function sendNotification($token, $title, $body)
+    public function sendNotification($token, $title, $body,$type,$target_id=null)
     {
         $response = $this->client->post('', [
             'json' => [
@@ -39,6 +39,8 @@ class FirebaseService
                     'notification' => [
                         'title' => $title,
                         'body' => $body,
+                        'type' => $type,
+                        'target_id' => $target_id
                     ],
                 ],
             ],
