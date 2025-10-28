@@ -221,7 +221,11 @@ class NubdhaController extends Controller
                 }
                 save::where('saveable_type','nubdha')->where('saveable_id',$nubdha->id)->delete();
                 $nubdha->delete();
+                return response()->json(['تم الحذف بنجاح'], 200);
             }
-        return response()->json(['تم الحذف بنجاح'], 200);
+            else{
+                return response()->json(['النبزة غير موجودة'], 200);
+            }
+
     }
 }
