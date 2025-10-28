@@ -52,12 +52,12 @@ public function index()
     $topByStory = [];
     if (!empty($storyIds)) {
         $idsStr = implode(',', array_map('intval', $storyIds));
-        $rows = DB::select(DB::raw("
+        $rows = DB::select("
             SELECT story_id, name_hashtag, COUNT(*) as votes
             FROM hashtag_stories
             WHERE story_id IN ($idsStr)
             GROUP BY story_id, name_hashtag
-        "));
+        ");
         foreach ($rows as $r) {
             $topByStory[$r->story_id] = [
                 'name_hashtag' => $r->name_hashtag,
