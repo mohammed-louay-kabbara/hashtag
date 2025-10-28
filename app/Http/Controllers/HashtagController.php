@@ -13,40 +13,72 @@ class HashtagController extends Controller
 {
 
     public function index()
-    {
-        $meId = auth()->id(); // أو null إن لم يسجل الدخول
-            $result = Hashtag::with('user')
-                ->withCount('loves')
-                ->orderByDesc('created_at')
-                ->get();
-            $ids = $result->pluck('id')->all();
-            $likedIds = [];
-            $savedIds = [];
-            if ($meId && !empty($ids)) {
-                // جلب كل الهاشتاغات التي أحبها المستخدم مرة واحدة
-                $likedIds = Love::where('user_id', $meId)
-                    ->whereIn('hashtag_id', $ids)
-                    ->pluck('hashtag_id')
-                    ->toArray();
-                    
-                // جلب كل الـ saves للموديل Hashtag مرة واحدة
-                $savedIds = Save::where('user_id', $meId)
-                    ->where('saveable_type', 'hashtag') // تأكد أن هذا ما تحفظه في قاعدة البيانات
-                    ->whereIn('saveable_id', $ids)
-                    ->pluck('saveable_id')
-                    ->toArray();
-            }
+{
+    $meId = auth()->id();
 
-            // 3. ربط النتائج
-            $hashtags = $result->map(function ($h) use ($likedIds, $savedIds) {
-                $h->isLiked = in_array($h->id, $likedIds, true);   // boolean
-                $h->isSaved = in_array($h->id, $savedIds, true);   // boolean
-                // إن أردت حذف العلاقات الثقيلة قبل الإرسال:
-                // unset($h->loves);
-                return $h;
-            });
-        return response()->json($hashtags, 200);
+    // جلب الهاشتاغات الأساسية مع علاقاتها وعدد الإعجابات
+    $result = Hashtag::with('user')
+        ->withCount('loves')
+        ->when($meId, function ($query) use ($meId) {
+            // في حال كان المستخدم مسجل دخول
+            $followedIds = Follower::where('user_id', $meId)->pluck('followed_id');
+
+            // نضيف ترتيبًا يعتمد على المتابعة + الإعجابات + الزمن
+            $query->orderByRaw("
+                (CASE WHEN user_id IN (" . $followedIds->implode(',') . ") THEN 2 ELSE 0 END)
+                + (loves_count * 0.7)
+                + (CASE 
+                    WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 24 THEN 3
+                    WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 72 THEN 1
+                    ELSE 0
+                  END)
+                DESC
+            ");
+        }, function ($query) {
+            // إذا لم يكن مسجل دخول: ترتيب حسب الإعجابات والزمن فقط
+            $query->orderByRaw("
+                (loves_count * 0.7)
+                + (CASE 
+                    WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 24 THEN 3
+                    WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 72 THEN 1
+                    ELSE 0
+                  END)
+                DESC
+            ");
+        })
+        ->get();
+
+    $ids = $result->pluck('id')->all();
+
+    // 🔹 المتغيرات لتحديد الإعجاب والحفظ
+    $likedIds = [];
+    $savedIds = [];
+
+    if ($meId && !empty($ids)) {
+        // جلب IDs الهاشتاغات التي أحبها المستخدم
+        $likedIds = Love::where('user_id', $meId)
+            ->whereIn('hashtag_id', $ids)
+            ->pluck('hashtag_id')
+            ->toArray();
+
+        // جلب IDs الهاشتاغات المحفوظة
+        $savedIds = Save::where('user_id', $meId)
+            ->where('saveable_type', 'hashtag')
+            ->whereIn('saveable_id', $ids)
+            ->pluck('saveable_id')
+            ->toArray();
     }
+
+    // 🔹 إرفاق حالات الإعجاب والحفظ بالنتيجة
+    $hashtags = $result->map(function ($h) use ($likedIds, $savedIds) {
+        $h->isLiked = in_array($h->id, $likedIds, true);
+        $h->isSaved = in_array($h->id, $savedIds, true);
+        return $h;
+    });
+
+    return response()->json($hashtags, 200);
+}
+
 
     public function create()
     {
