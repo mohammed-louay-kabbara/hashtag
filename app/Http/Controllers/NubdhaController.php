@@ -12,6 +12,7 @@ use App\Traits\WithFollowStatus;
 use App\Models\User;
 use App\Models\Save;
 
+
 class NubdhaController extends Controller
 {
     public function index()
@@ -148,11 +149,22 @@ class NubdhaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'media' => 'required', 
+        'media' => 'required|array|min:1',
+    ]);
+
+    // نتحقق أولًا أن الملفات موجودة
+    if (!$request->hasFile('media')) {
+        return response()->json(['message' => 'لم يتم اختيار أي وسائط.'], 422);
+    }
+
+    DB::beginTransaction(); // نبدأ معاملة قاعدة بيانات
+
+    try {
+        // إنشاء النبذة فقط بعد التأكد من الملفات
+        $nubdha = nubdha::create([
+            'user_id' => Auth::id(),
         ]);
-        $nubdha=nubdha::create([
-            'user_id' => Auth::id()
-        ]);
+
         foreach ($request->file('media') as $index => $file) {
             $path = $file->store('stories', 'public');
             $type = strpos($file->getMimeType(), 'video') !== false ? 'video' : 'image';
@@ -163,11 +175,26 @@ class NubdhaController extends Controller
                 'caption' => $request->captions[$index] ?? null
             ]);
         }
-     return response()->json([
-        'message' => 'تمت الإضافة بنجاح',
-        'nubdha' => $nubdha->load('stories')
-    ], 201);
+
+        DB::commit(); // تم كل شيء بنجاح
+        return response()->json([
+            'message' => 'تمت الإضافة بنجاح',
+            'nubdha' => $nubdha->load('stories')
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack(); // إلغاء كل التغييرات إذا حدث خطأ
+        return response()->json([
+            'message' => 'حدث خطأ أثناء حفظ البيانات',
+            'error' => $e->getMessage()
+        ], 500);
     }
+    }
+
+    
+
+
+
 
     /**
      * Display the specified resource.
