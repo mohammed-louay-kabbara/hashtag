@@ -47,7 +47,7 @@ public function index()
             ->toArray();
     }
 
-    // 4️⃣ حساب الهاشتاغ الأعلى لكل ستوري (نفس كودك)
+    // 4️⃣ حساب الهاشتاغ الأعلى لكل ستوري
     $storyIds = $nubdhas->pluck('stories.*.id')->flatten()->filter()->unique()->values()->all();
     $topByStory = [];
     if (!empty($storyIds)) {
@@ -66,19 +66,31 @@ public function index()
         }
     }
 
-    // 5️⃣ حساب score لكل nubdha
+    // 5️⃣ جلب الهاشتاغ الذي أضافه المستخدم نفسه
+    $userHashtags = [];
+    if ($meId && !empty($storyIds)) {
+        $rows = DB::table('hashtag_stories')
+            ->select('story_id', 'name_hashtag')
+            ->where('user_id', $meId)
+            ->whereIn('story_id', $storyIds)
+            ->get();
+
+        foreach ($rows as $r) {
+            $userHashtags[$r->story_id] = $r->name_hashtag;
+        }
+    }
+
+    // 6️⃣ حساب score لكل nubdha
     $scored = $nubdhas->map(function ($n) use ($followedIds, $meId, $userInterests, $topByStory) {
         $viewsCount = $n->nubdha_view_count ?? 0;
         $isFollowed = $followedIds->contains($n->user_id);
         $isRecent = $n->created_at->gt(now()->subHours(24));
 
-        // متوسط أصوات الهاشتاغات في القصص التابعة
         $votesSum = 0;
         $matchesInterest = 0;
         foreach ($n->stories as $s) {
             if (isset($topByStory[$s->id])) {
                 $votesSum += $topByStory[$s->id]['votes'];
-                // تطابق الاهتمامات
                 if (in_array($topByStory[$s->id]['name_hashtag'], $userInterests)) {
                     $matchesInterest += 1;
                 }
@@ -86,7 +98,6 @@ public function index()
         }
         $avgVotes = count($n->stories) ? $votesSum / count($n->stories) : 0;
 
-        // 🧮 الحساب النهائي للنقاط
         $n->score =
             ($viewsCount * 0.5) +
             ($avgVotes * 1) +
@@ -97,10 +108,10 @@ public function index()
         return $n;
     });
 
-    // 6️⃣ الترتيب حسب النقاط
+    // 7️⃣ الترتيب حسب النقاط
     $sorted = $scored->sortByDesc('score')->values();
 
-    // 7️⃣ تجهيز بيانات الحفظ والهاشتاغات (كما في كودك الأصلي)
+    // 8️⃣ تجهيز بيانات الحفظ والهاشتاغات
     $savedIds = [];
     if ($meId && !empty($ids)) {
         $savedIds = Save::where('user_id', $meId)
@@ -110,20 +121,27 @@ public function index()
             ->toArray();
     }
 
-    $sorted->transform(function ($nubdha) use ($savedIds, $topByStory, $userInterests) {
+    $sorted->transform(function ($nubdha) use ($savedIds, $topByStory, $userInterests, $userHashtags) {
         $nubdha->isSaved = in_array($nubdha->id, $savedIds, true);
 
-        $nubdha->stories->transform(function ($story) use ($topByStory, $userInterests) {
+        $nubdha->stories->transform(function ($story) use ($topByStory, $userInterests, $userHashtags) {
+            // الهاشتاغ الأعلى
             $story->top_hashtag = $topByStory[$story->id]['name_hashtag'] ?? null;
             $story->hashtag_votes = $topByStory[$story->id]['votes'] ?? 0;
+
+            // هل يطابق اهتمام المستخدم
             $story->matches_interest = in_array($story->top_hashtag, $userInterests);
+
+            // الهاشتاغ الذي أضافه المستخدم نفسه
+            $story->user_hashtag = $userHashtags[$story->id] ?? null;
+
             return $story;
         });
 
         return $nubdha;
     });
 
-    // 8️⃣ الإرجاع بنفس الشكل الأصلي
+    // 9️⃣ الإرجاع بنفس الشكل الأصلي
     return response()->json($sorted->values(), 200);
 }
 
