@@ -17,76 +17,147 @@ class NubdhaController extends Controller
 {
 public function index()
 {
-    $meId = auth()->id();
+    $meId = Auth::id();
 
-    // جلب النبضات مع عدد الإعجابات والعلاقات
-    $result = Nidha::with(['user'])
-        ->withCount('loves')
-        ->when($meId, function ($query) use ($meId) {
-            // IDs المستخدمين الذين يتابعهم
-            $followedIds = Follower::where('user_id', $meId)
-                ->pluck('followed_id');
-
-            // خوارزمية الترتيب المحسّنة
-            $query->orderByRaw("
-                (CASE WHEN user_id IN (" . ($followedIds->isEmpty() ? 0 : $followedIds->implode(',')) . ") THEN 2 ELSE 0 END)
-                + (loves_count * 0.7)
-                + (
-                    CASE
-                        WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 24 THEN 5   -- وزن أعلى للأحدث
-                        WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 72 THEN 2
-                        ELSE 0
-                    END
-                )
-                + (1 / GREATEST(TIMESTAMPDIFF(MINUTE, created_at, NOW()), 1))   -- أولوية قوية للأحدث
-                DESC
-            ");
-        }, function ($query) {
-            // إذا لم يكن مسجلاً دخول
-            $query->orderByRaw("
-                (loves_count * 0.7)
-                + (
-                    CASE
-                        WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 24 THEN 5
-                        WHEN TIMESTAMPDIFF(HOUR, created_at, NOW()) <= 72 THEN 2
-                        ELSE 0
-                    END
-                )
-                + (1 / GREATEST(TIMESTAMPDIFF(MINUTE, created_at, NOW()), 1))
-                DESC
-            ");
-        })
+    // 1️⃣ جلب النبذات الأساسية
+    $nubdhas = Nubdha::with(['user', 'stories'])
+        ->withCount('nubdha_view')
         ->get();
 
-    $ids = $result->pluck('id')->all();
+    $ids = $nubdhas->pluck('id')->all();
 
-    // تعريف likedId و savedIds
-    $likedIds = [];
-    $savedIds = [];
+    // 2️⃣ المستخدمين الذين يتابعهم
+    $followedIds = collect();
+    if ($meId) {
+        $followedIds = DB::table('followers')
+            ->where('user_id', $meId)
+            ->pluck('followed_id');
+    }
 
-    if ($meId && !empty($ids)) {
-
-        $likedIds = Love::where('user_id', $meId)
-            ->whereIn('nidha_id', $ids)
-            ->pluck('nidha_id')
+    // 3️⃣ اهتمامات المستخدم
+    $userInterests = [];
+    if ($meId) {
+        $userInterests = DB::table('hashtag_stories')
+            ->where('user_id', $meId)
+            ->select('name_hashtag', DB::raw('COUNT(*) as count'))
+            ->groupBy('name_hashtag')
+            ->orderByDesc('count')
+            ->limit(5)
+            ->pluck('name_hashtag')
             ->toArray();
+    }
 
+    // 4️⃣ الهاشتاغ الأعلى لكل ستوري
+    $storyIds = $nubdhas->pluck('stories.*.id')->flatten()->filter()->unique()->values()->all();
+    $topByStory = [];
+
+    if (!empty($storyIds)) {
+        $idsStr = implode(',', array_map('intval', $storyIds));
+        $rows = DB::select("
+            SELECT story_id, name_hashtag, COUNT(*) as votes
+            FROM hashtag_stories
+            WHERE story_id IN ($idsStr)
+            GROUP BY story_id, name_hashtag
+        ");
+        foreach ($rows as $r) {
+            $topByStory[$r->story_id] = [
+                'name_hashtag' => $r->name_hashtag,
+                'votes' => (int) $r->votes,
+            ];
+        }
+    }
+
+    // 5️⃣ هاشتاغ المستخدم نفسه
+    $userHashtags = [];
+    if ($meId && !empty($storyIds)) {
+        $rows = DB::table('hashtag_stories')
+            ->select('story_id', 'name_hashtag')
+            ->where('user_id', $meId)
+            ->whereIn('story_id', $storyIds)
+            ->get();
+
+        foreach ($rows as $r) {
+            $userHashtags[$r->story_id] = $r->name_hashtag;
+        }
+    }
+
+    // 6️⃣ حساب score وترتيب
+    $scored = $nubdhas->map(function ($n) use ($followedIds, $userInterests, $topByStory) {
+
+        // عدد المشاهدات
+        $viewsCount = $n->nubdha_view_count ?? 0;
+
+        // هل المستخدم يتابع صاحب النبذة؟
+        $isFollowed = $followedIds->contains($n->user_id);
+
+        // هل النبذة جديدة < 24 ساعة؟
+        $isRecent = $n->created_at->gt(now()->subHours(24));
+
+        // الوقت بالدقائق منذ الإنشاء → لتقوية الجديد
+        $minutesSince = $n->created_at->diffInMinutes(now());
+        $timeBoost = 1 / max($minutesSince, 1); // وزن قوي للأحدث
+
+        // حساب أصوات الهاشتاغ
+        $votesSum = 0;
+        $matchesInterest = 0;
+
+        foreach ($n->stories as $s) {
+            if (isset($topByStory[$s->id])) {
+                $votesSum += $topByStory[$s->id]['votes'];
+
+                if (in_array($topByStory[$s->id]['name_hashtag'], $userInterests)) {
+                    $matchesInterest += 1;
+                }
+            }
+        }
+
+        $avgVotes = count($n->stories) ? $votesSum / count($n->stories) : 0;
+
+        // ⭐ الخوارزمية الجديدة
+        $n->score =
+            ($viewsCount * 0.5) +
+            ($avgVotes * 1) +
+            ($isFollowed ? 2 : 0) +
+            ($isRecent ? 3 : 0) +
+            ($matchesInterest * 2) +
+            ($timeBoost * 10);   // وزن إضافي للأحدث
+
+        return $n;
+    });
+
+    // 7️⃣ الترتيب النهائي
+    $sorted = $scored->sortByDesc('score')->values();
+
+    // 8️⃣ بيانات الحفظ
+    $savedIds = [];
+    if ($meId && !empty($ids)) {
         $savedIds = Save::where('user_id', $meId)
-            ->where('saveable_type', 'nidha')
+            ->where('saveable_type', 'nubdha')
             ->whereIn('saveable_id', $ids)
             ->pluck('saveable_id')
             ->toArray();
     }
 
-    // إرفاق حالات الإعجاب والحفظ
-    $nidhas = $result->map(function ($n) use ($likedIds, $savedIds) {
-        $n->isLiked = in_array($n->id, $likedIds, true);
-        $n->isSaved = in_array($n->id, $savedIds, true);
-        return $n;
+    // 📌 مهم: لا نغير أي شيء في الـ response
+    $sorted->transform(function ($nubdha) use ($savedIds, $topByStory, $userInterests, $userHashtags) {
+        $nubdha->isSaved = in_array($nubdha->id, $savedIds, true);
+
+        $nubdha->stories->transform(function ($story) use ($topByStory, $userInterests, $userHashtags) {
+            $story->top_hashtag = $topByStory[$story->id]['name_hashtag'] ?? null;
+            $story->hashtag_votes = $topByStory[$story->id]['votes'] ?? 0;
+            $story->matches_interest = in_array($story->top_hashtag, $userInterests);
+            $story->user_hashtag = $userHashtags[$story->id] ?? null;
+            return $story;
+        });
+
+        return $nubdha;
     });
 
-    return response()->json($nidhas, 200);
+    // 9️⃣ إرجاع نفس الـ response
+    return response()->json($sorted->values(), 200);
 }
+
+
 
     public function create()
     {
